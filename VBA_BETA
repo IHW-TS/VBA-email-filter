@@ -1,0 +1,67 @@
+Sub MoveEmailsFromLocalExcel()
+    Dim olApp As Outlook.Application
+    Dim olNamespace As Outlook.NameSpace
+    Dim olFolder As Outlook.MAPIFolder
+    Dim olDestinationFolder As Outlook.MAPIFolder
+    Dim olMail As Outlook.mailItem
+    Dim i As Long
+    Dim dossierNumbers As Object
+    Dim xlApp As Object
+    Dim xlWorkbook As Object
+    Dim xlSheet As Object
+    Dim cell As Object
+    Dim userProfilePath As String
+    Dim excelFilePath As String
+
+    On Error GoTo ErrorHandler
+
+    ' Obtenir le chemin du profil utilisateur
+    userProfilePath = Environ("USERPROFILE")
+    excelFilePath = userProfilePath & "\Desktop\aaaa.xlsx"
+
+    ' Ouvrir le fichier Excel
+    Set xlApp = CreateObject("Excel.Application")
+    Set xlWorkbook = xlApp.Workbooks.Open(excelFilePath)
+    Set xlSheet = xlWorkbook.Sheets("blanc")
+
+    ' Lire les numéros de dossier depuis la colonne A
+    Set dossierNumbers = CreateObject("Scripting.Dictionary")
+    For Each cell In xlSheet.Range("A1:A" & xlSheet.Cells(xlSheet.Rows.Count, "A").End(-4162).Row)
+        If cell.Value <> "" Then
+            dossierNumbers.Add cell.Value, cell.Value
+        End If
+    Next cell
+
+    ' Fermer le fichier Excel
+    xlWorkbook.Close False
+    xlApp.Quit
+    Set xlApp = Nothing
+
+    ' Se connecter à Outlook
+    Set olApp = New Outlook.Application
+    Set olNamespace = olApp.GetNamespace("MAPI")
+    Set olFolder = olNamespace.GetDefaultFolder(olFolderInbox)
+    Set olDestinationFolder = olNamespace.Folders("teoman.soykan@lcl.fr").Folders("test")
+
+    ' Parcourir les emails et les déplacer
+    For i = olFolder.items.Count To 1 Step -1
+        If TypeOf olFolder.items(i) Is Outlook.mailItem Then
+            Set olMail = olFolder.items(i)
+            For Each dossierNumber In dossierNumbers
+                If InStr(olMail.Subject, dossierNumber) > 0 Then
+                    olMail.Move olDestinationFolder
+                    Exit For
+                End If
+            Next dossierNumber
+        End If
+    Next i
+
+    MsgBox "Emails déplacés avec succès!"
+
+    Exit Sub
+
+ErrorHandler:
+    MsgBox "Erreur : " & Err.Description
+    If Not xlApp Is Nothing Then xlApp.Quit
+End Sub
+
