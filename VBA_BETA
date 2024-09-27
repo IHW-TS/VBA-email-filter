@@ -17,12 +17,12 @@ Sub MoveEmailsFromLocalExcel()
 
     ' Obtenir le chemin du profil utilisateur
     userProfilePath = Environ("USERPROFILE")
-    excelFilePath = userProfilePath & "\Desktop\aaaa.xlsx"
+    excelFilePath = userProfilePath & "\Desktop\Nomdevotrefichier.xlsx"
 
     ' Ouvrir le fichier Excel
     Set xlApp = CreateObject("Excel.Application")
     Set xlWorkbook = xlApp.Workbooks.Open(excelFilePath)
-    Set xlSheet = xlWorkbook.Sheets("blanc")
+    Set xlSheet = xlWorkbook.Sheets("Nom de votre feuille sur Excel")
 
     ' Lire les numéros de dossier depuis la colonne A
     Set dossierNumbers = CreateObject("Scripting.Dictionary")
@@ -41,7 +41,8 @@ Sub MoveEmailsFromLocalExcel()
     Set olApp = New Outlook.Application
     Set olNamespace = olApp.GetNamespace("MAPI")
     Set olFolder = olNamespace.GetDefaultFolder(olFolderInbox)
-    Set olDestinationFolder = olNamespace.Folders("teoman.soykan@lcl.fr").Folders("test")
+    Set olDestinationFolder = olNamespace.Folders("Votre boite mail générique").Folders("Le nom de votre sous dossier")
+
 
     ' Parcourir les emails et les déplacer
     For i = olFolder.items.Count To 1 Step -1
