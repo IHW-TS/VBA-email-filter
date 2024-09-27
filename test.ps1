@@ -65,7 +65,7 @@ $excel.Quit()
 # Se connecter à Outlook
 $outlook = New-Object -ComObject Outlook.Application
 $namespace = $outlook.GetNamespace("MAPI")
-$rootFolder = $namespace.Folders.Item("teoman.soykan@lcl.fr") # Votre boite mail générique
+$rootFolder = $namespace.Folders.Item("Votre boite mail générique") # Votre boite mail générique
 
 # Trouver le dossier "Boîte de réception" de manière récursive
 $inbox = Find-Folder -parentFolder $rootFolder -folderName "Boîte de réception"
