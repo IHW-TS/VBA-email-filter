@@ -31,7 +31,7 @@ function Find-Folder($parentFolder, $folderName) {
 }
 
 # Ouvrir le fichier Excel
-$excelPath = "$env:USERPROFILE\\Desktop\\aaaa.xlsx"
+$excelPath = "$env:USERPROFILE\\Desktop\\aaaa.xlsx" # Nom de votre fichier Excel à placer sur votre bureau
 $excel = New-Object -ComObject Excel.Application
 
 try {
@@ -42,7 +42,7 @@ try {
     exit
 }
 
-$sheet = $workbook.Sheets.Item("blanc")
+$sheet = $workbook.Sheets.Item("blanc") # Nom de votre feuille sur Excel
 
 # Lire les numéros de dossier depuis la colonne A
 $dossierNumbers = @()
@@ -65,7 +65,7 @@ $excel.Quit()
 # Se connecter à Outlook
 $outlook = New-Object -ComObject Outlook.Application
 $namespace = $outlook.GetNamespace("MAPI")
-$rootFolder = $namespace.Folders.Item("teoman.soykan@lcl.fr")
+$rootFolder = $namespace.Folders.Item("teoman.soykan@lcl.fr") # Votre boite mail générique
 
 # Trouver le dossier "Boîte de réception" de manière récursive
 $inbox = Find-Folder -parentFolder $rootFolder -folderName "Boîte de réception"
@@ -75,7 +75,7 @@ if ($inbox -eq $null) {
 }
 
 # Trouver le dossier "test" au niveau supérieur
-$testFolder = Get-Folder -parentFolder $rootFolder -folderName "test"
+$testFolder = Get-Folder -parentFolder $rootFolder -folderName "test" # Le nom de votre sous dossier 
 if ($testFolder -eq $null) {
     Write-Host "Erreur : Dossier 'test' introuvable."
     exit
