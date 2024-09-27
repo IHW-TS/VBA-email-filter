@@ -1,0 +1,135 @@
+Sub MoveEmailsFromLocalExcelNAN()
+    Dim olApp As Outlook.Application
+    Dim olNamespace As Outlook.NameSpace
+    Dim olFolder As Outlook.MAPIFolder
+    Dim olDestinationFolder As Outlook.MAPIFolder
+    Dim olMail As Outlook.mailItem
+    Dim i As Long
+    Dim dossierNumbers As Object
+    Dim phrases As Object
+    Dim xlApp As Object
+    Dim xlWorkbook As Object
+    Dim xlSheet As Object
+    Dim cell As Object
+    Dim userProfilePath As String
+    Dim excelFilePath As String
+    Dim movedCount As Long
+    Dim notFoundNumbers As Object
+    Dim notFoundPhrases As Object
+
+    On Error GoTo ErrorHandler
+
+    ' Obtenir le chemin du profil utilisateur
+    userProfilePath = Environ("USERPROFILE")
+    excelFilePath = userProfilePath & "\Desktop\aaaa.xlsx"
+
+    ' Ouvrir le fichier Excel
+    Set xlApp = CreateObject("Excel.Application")
+    Set xlWorkbook = xlApp.Workbooks.Open(excelFilePath)
+    Set xlSheet = xlWorkbook.Sheets("blanc")
+
+    ' Lire les numéros de dossier depuis la colonne A
+    Set dossierNumbers = CreateObject("Scripting.Dictionary")
+    For Each cell In xlSheet.Range("A1:A" & xlSheet.Cells(xlSheet.Rows.Count, "A").End(-4162).Row)
+        If cell.Value <> "" Then
+            dossierNumbers.Add cell.Value, cell.Value
+        End If
+    Next cell
+
+    ' Lire les phrases ou mots depuis la colonne B
+    Set phrases = CreateObject("Scripting.Dictionary")
+    For Each cell In xlSheet.Range("B1:B" & xlSheet.Cells(xlSheet.Rows.Count, "B").End(-4162).Row)
+        If cell.Value <> "" Then
+            phrases.Add cell.Value, cell.Value
+        End If
+    Next cell
+
+    ' Fermer le fichier Excel
+    xlWorkbook.Close False
+    xlApp.Quit
+    Set xlApp = Nothing
+
+    ' Se connecter à Outlook
+    Set olApp = New Outlook.Application
+    Set olNamespace = olApp.GetNamespace("MAPI")
+    Set olFolder = olNamespace.GetDefaultFolder(olFolderInbox)
+    Set olDestinationFolder = olNamespace.Folders("teoman.soykan@lcl.fr").Folders("test")
+
+    ' Initialiser le compteur et les listes des non trouvés
+    movedCount = 0
+    Set notFoundNumbers = CreateObject("Scripting.Dictionary")
+    Set notFoundPhrases = CreateObject("Scripting.Dictionary")
+
+    ' Parcourir les emails et les déplacer
+    For i = olFolder.items.Count To 1 Step -1
+        If TypeOf olFolder.items(i) Is Outlook.mailItem Then
+            Set olMail = olFolder.items(i)
+            For Each dossierNumber In dossierNumbers
+                If InStr(olMail.Subject, dossierNumber) > 0 Then
+                    olMail.Move olDestinationFolder
+                    movedCount = movedCount + 1
+                    dossierNumbers.Remove dossierNumber
+                    Exit For
+                End If
+            Next dossierNumber
+            For Each phrase In phrases
+                If InStr(olMail.Subject, phrase) > 0 Then
+                    olMail.Move olDestinationFolder
+                    movedCount = movedCount + 1
+                    phrases.Remove phrase
+                    Exit For
+                End If
+            Next phrase
+        End If
+    Next i
+
+    ' Ajouter les numéros de dossier et phrases non trouvés aux listes
+    For Each dossierNumber In dossierNumbers
+        notFoundNumbers.Add dossierNumber, dossierNumber
+    Next dossierNumber
+    For Each phrase In phrases
+        notFoundPhrases.Add phrase, phrase
+    Next phrase
+
+    ' Message personnalisé en fonction du nombre de fichiers déplacés
+    If movedCount = 0 Then
+        MsgBox "Aucun fichier n'a été déplacé. Vérifiez les numéros de dossier et les phrases dans le fichier Excel."
+    Else
+        Select Case movedCount
+            Case 1
+                MsgBox "Tu as déplacé 1 fichier. Tu m'utilises que pour ça ? "
+            Case 2 To 5
+                MsgBox "Bravo, tu as déplacé " & movedCount & " fichiers ! Continue comme ça ! "
+            Case 6 To 10
+                MsgBox "Super ! " & movedCount & " fichiers déplacés. Tu es sur la bonne voie ! "
+            Case Else
+                MsgBox "Époustouflant ! " & movedCount & " fichiers déplacés. Tu es une légende ! "
+        End Select
+    End If
+
+    ' Afficher les numéros de dossier et phrases non trouvés
+    If notFoundNumbers.Count > 0 Or notFoundPhrases.Count > 0 Then
+        Dim notFoundList As String
+        notFoundList = "Les éléments suivants n'ont pas été trouvés dans la boîte de réception : " & vbCrLf
+        If notFoundNumbers.Count > 0 Then
+            notFoundList = notFoundList & "Numéros de dossier : " & vbCrLf
+            For Each dossierNumber In notFoundNumbers
+                notFoundList = notFoundList & dossierNumber & vbCrLf
+            Next dossierNumber
+        End If
+        If notFoundPhrases.Count > 0 Then
+            notFoundList = notFoundList & "Phrases : " & vbCrLf
+            For Each phrase In notFoundPhrases
+                notFoundList = notFoundList & phrase & vbCrLf
+            Next phrase
+        End If
+        MsgBox notFoundList
+    End If
+
+    Exit Sub
+
+ErrorHandler:
+    MsgBox "Erreur : " & Err.Description
+    If Not xlApp Is Nothing Then xlApp.Quit
+End Sub
+
